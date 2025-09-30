@@ -34,6 +34,7 @@
 - Start new boards by copying a similar `main/boards/*/` profile, updating `idf_component.yml`, and refreshing partition defaults.
 - Keep heavy binaries in the assets partition; use `scripts/ogg_converter/` or `scripts/mp3_to_ogg.sh`, and never commit credentials from captured logs.
 - For the in-house Xiaomou board, follow `main/boards/xiaomou/` for pin maps and build settings traced to `debug/sch/Netlist_Schematic1_2025-09-30.enet`.
+- LCD electrical notes live in `docs/hardware/xiaomou-lcd.md`; keep that file updated if the panel or FPC pinout changes.
 
 ## Custom Hardware Reference
 - `debug/sch/Netlist_Schematic1_2025-09-30.enet`: Authoritative board netlist/BOM—open it for every hardware issue and during reviews.

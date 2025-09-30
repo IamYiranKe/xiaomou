@@ -16,7 +16,40 @@
 #include <esp_lcd_panel_io.h>
 #include <esp_lcd_panel_ops.h>
 #include <esp_lcd_panel_vendor.h>
-#include <esp_lcd_st7789.h>
+#include <esp_lcd_st7796.h>
+
+typedef struct {
+    int cmd;
+    const void* data;
+    size_t data_bytes;
+    unsigned int delay_ms;
+} st7796_lcd_init_cmd_t;
+
+typedef struct {
+    const st7796_lcd_init_cmd_t* init_cmds;
+    uint16_t init_cmds_size;
+} st7796_vendor_config_t;
+
+static const st7796_lcd_init_cmd_t kSt7796InitCmds[] = {
+    {0x11, nullptr, 0, 120},
+    {0x36, (uint8_t[]){0x48}, 1, 0},
+    {0x3A, (uint8_t[]){0x55}, 1, 0},
+    {0xF0, (uint8_t[]){0xC3}, 1, 0},
+    {0xF0, (uint8_t[]){0x96}, 1, 0},
+    {0xB4, (uint8_t[]){0x01}, 1, 0},
+    {0xB7, (uint8_t[]){0xC6}, 1, 0},
+    {0xB9, (uint8_t[]){0x02, 0xE0}, 2, 0},
+    {0xC0, (uint8_t[]){0xF0, 0x54}, 2, 0},
+    {0xC1, (uint8_t[]){0x15}, 1, 0},
+    {0xC2, (uint8_t[]){0xAF}, 1, 0},
+    {0xC5, (uint8_t[]){0x1C}, 1, 0},
+    {0xE7, (uint8_t[]){0x27, 0x02, 0x42, 0xB5, 0x05}, 5, 0},
+    {0xE8, (uint8_t[]){0x40, 0x8A, 0x00, 0x00, 0x29, 0x19, 0xA5, 0x33}, 8, 0},
+    {0xE0, (uint8_t[]){0xD0, 0x0A, 0x00, 0x1B, 0x15, 0x27, 0x33, 0x44, 0x48, 0x17, 0x14, 0x15, 0x2C, 0x31}, 14, 0},
+    {0xE1, (uint8_t[]){0xD0, 0x14, 0x00, 0x1F, 0x13, 0x0B, 0x32, 0x43, 0x47, 0x38, 0x12, 0x12, 0x2A, 0x32}, 14, 0},
+    {0xF0, (uint8_t[]){0x3C}, 1, 0},
+    {0xF0, (uint8_t[]){0x69}, 1, 120},
+};
 
 #define TAG "XiaomouBoard"
 
@@ -67,11 +100,17 @@ private:
         ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi(SPI3_HOST, &io_cfg, &panel_io));
 
         esp_lcd_panel_handle_t panel = nullptr;
+        const st7796_vendor_config_t vendor_cfg = {
+            .init_cmds = kSt7796InitCmds,
+            .init_cmds_size = sizeof(kSt7796InitCmds) / sizeof(kSt7796InitCmds[0]),
+        };
+
         esp_lcd_panel_dev_config_t panel_cfg = {};
         panel_cfg.reset_gpio_num = DISPLAY_SPI_RESET_PIN;
         panel_cfg.rgb_endian = LCD_RGB_ELEMENT_ORDER_RGB;
         panel_cfg.bits_per_pixel = 16;
-        ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(panel_io, &panel_cfg, &panel));
+        panel_cfg.vendor_config = &vendor_cfg;
+        ESP_ERROR_CHECK(esp_lcd_new_panel_st7796(panel_io, &panel_cfg, &panel));
 
         ESP_ERROR_CHECK(esp_lcd_panel_reset(panel));
         ESP_ERROR_CHECK(esp_lcd_panel_init(panel));
