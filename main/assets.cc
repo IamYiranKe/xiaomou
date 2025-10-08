@@ -132,11 +132,13 @@ bool Assets::Apply() {
                 models_list_ = nullptr;
             }
             models_list_ = srmodel_load(static_cast<uint8_t*>(ptr));
-            if (models_list_ != nullptr) {
-                auto& app = Application::GetInstance();
+            auto& app = Application::GetInstance();
+            if (models_list_ != nullptr && app.IsAudioEnabled()) {
                 app.GetAudioService().SetModelsList(models_list_);
-            } else {
+            } else if (models_list_ == nullptr) {
                 ESP_LOGE(TAG, "Failed to load srmodels.bin");
+            } else {
+                ESP_LOGW(TAG, "Audio disabled, skipping srmodels setup");
             }
         } else {
             ESP_LOGE(TAG, "The srmodels file %s is not found", srmodels_file.c_str());

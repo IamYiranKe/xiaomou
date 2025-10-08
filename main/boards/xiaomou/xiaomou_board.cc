@@ -1,5 +1,8 @@
+#include "sdkconfig.h"
 #include "wifi_board.h"
+#if CONFIG_XIAOMOU_ENABLE_AUDIO
 #include "codecs/es8311_audio_codec.h"
+#endif
 #include "display/lcd_display.h"
 #include "application.h"
 #include "button.h"
@@ -18,49 +21,40 @@
 #include <esp_lcd_panel_vendor.h>
 #include <esp_lcd_st7796.h>
 
-typedef struct {
-    int cmd;
-    const void* data;
-    size_t data_bytes;
-    unsigned int delay_ms;
-} st7796_lcd_init_cmd_t;
-
-typedef struct {
-    const st7796_lcd_init_cmd_t* init_cmds;
-    uint16_t init_cmds_size;
-} st7796_vendor_config_t;
-
 static const st7796_lcd_init_cmd_t kSt7796InitCmds[] = {
     {0x11, nullptr, 0, 120},
-    {0x36, (uint8_t[]){0x48}, 1, 0},
-    {0x3A, (uint8_t[]){0x55}, 1, 0},
-    {0xF0, (uint8_t[]){0xC3}, 1, 0},
-    {0xF0, (uint8_t[]){0x96}, 1, 0},
-    {0xB4, (uint8_t[]){0x01}, 1, 0},
-    {0xB7, (uint8_t[]){0xC6}, 1, 0},
-    {0xB9, (uint8_t[]){0x02, 0xE0}, 2, 0},
-    {0xC0, (uint8_t[]){0xF0, 0x54}, 2, 0},
-    {0xC1, (uint8_t[]){0x15}, 1, 0},
-    {0xC2, (uint8_t[]){0xAF}, 1, 0},
-    {0xC5, (uint8_t[]){0x1C}, 1, 0},
-    {0xE7, (uint8_t[]){0x27, 0x02, 0x42, 0xB5, 0x05}, 5, 0},
-    {0xE8, (uint8_t[]){0x40, 0x8A, 0x00, 0x00, 0x29, 0x19, 0xA5, 0x33}, 8, 0},
-    {0xE0, (uint8_t[]){0xD0, 0x0A, 0x00, 0x1B, 0x15, 0x27, 0x33, 0x44, 0x48, 0x17, 0x14, 0x15, 0x2C, 0x31}, 14, 0},
-    {0xE1, (uint8_t[]){0xD0, 0x14, 0x00, 0x1F, 0x13, 0x0B, 0x32, 0x43, 0x47, 0x38, 0x12, 0x12, 0x2A, 0x32}, 14, 0},
-    {0xF0, (uint8_t[]){0x3C}, 1, 0},
-    {0xF0, (uint8_t[]){0x69}, 1, 120},
+    {0x36, (const uint8_t[]){0x48}, 1, 0},
+    {0x3A, (const uint8_t[]){0x55}, 1, 0},
+    {0xF0, (const uint8_t[]){0xC3}, 1, 0},
+    {0xF0, (const uint8_t[]){0x96}, 1, 0},
+    {0xB4, (const uint8_t[]){0x01}, 1, 0},
+    {0xB7, (const uint8_t[]){0xC6}, 1, 0},
+    {0xB9, (const uint8_t[]){0x02, 0xE0}, 2, 0},
+    {0xC0, (const uint8_t[]){0xF0, 0x54}, 2, 0},
+    {0xC1, (const uint8_t[]){0x15}, 1, 0},
+    {0xC2, (const uint8_t[]){0xAF}, 1, 0},
+    {0xC5, (const uint8_t[]){0x1C}, 1, 0},
+    {0xE7, (const uint8_t[]){0x27, 0x02, 0x42, 0xB5, 0x05}, 5, 0},
+    {0xE8, (const uint8_t[]){0x40, 0x8A, 0x00, 0x00, 0x29, 0x19, 0xA5, 0x33}, 8, 0},
+    {0xE0, (const uint8_t[]){0xD0, 0x0A, 0x00, 0x1B, 0x15, 0x27, 0x33, 0x44, 0x48, 0x17, 0x14, 0x15, 0x2C, 0x31}, 14, 0},
+    {0xE1, (const uint8_t[]){0xD0, 0x14, 0x00, 0x1F, 0x13, 0x0B, 0x32, 0x43, 0x47, 0x38, 0x12, 0x12, 0x2A, 0x32}, 14, 0},
+    {0xF0, (const uint8_t[]){0x3C}, 1, 0},
+    {0xF0, (const uint8_t[]){0x69}, 1, 120},
 };
 
 #define TAG "XiaomouBoard"
 
 class XiaomouBoard : public WifiBoard {
 private:
+#if CONFIG_XIAOMOU_ENABLE_AUDIO
     i2c_master_bus_handle_t codec_i2c_bus_{};
+#endif
     Button boot_button_;
     Display* display_{};
     Esp32Camera* camera_{};
 
     void InitializeCodecI2c() {
+#if CONFIG_XIAOMOU_ENABLE_AUDIO
         i2c_master_bus_config_t cfg = {
             .i2c_port = I2C_NUM_0,
             .sda_io_num = AUDIO_CODEC_I2C_SDA_PIN,
@@ -74,6 +68,7 @@ private:
             },
         };
         ESP_ERROR_CHECK(i2c_new_master_bus(&cfg, &codec_i2c_bus_));
+#endif
     }
 
     void InitializeSpi() {
@@ -100,7 +95,7 @@ private:
         ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi(SPI3_HOST, &io_cfg, &panel_io));
 
         esp_lcd_panel_handle_t panel = nullptr;
-        const st7796_vendor_config_t vendor_cfg = {
+        st7796_vendor_config_t vendor_cfg = {
             .init_cmds = kSt7796InitCmds,
             .init_cmds_size = sizeof(kSt7796InitCmds) / sizeof(kSt7796InitCmds[0]),
         };
@@ -125,6 +120,7 @@ private:
             DISPLAY_MIRROR_X, DISPLAY_MIRROR_Y, DISPLAY_SWAP_XY);
     }
 
+#if CONFIG_XIAOMOU_ENABLE_CAMERA
     void InitializeCamera() {
         camera_config_t config = {};
         config.pin_pwdn = CAMERA_PIN_PWDN;
@@ -157,6 +153,9 @@ private:
         camera_->SetHMirror(false);
         camera_->SetVFlip(false);
     }
+#else
+    void InitializeCamera() {}
+#endif
 
     void InitializeButtons() {
         boot_button_.OnClick([this]() {
@@ -170,14 +169,22 @@ private:
 
 public:
     XiaomouBoard() : boot_button_(BOOT_BUTTON_GPIO) {
+#if CONFIG_XIAOMOU_ENABLE_AUDIO
         InitializeCodecI2c();
+#endif
+#if CONFIG_XIAOMOU_ENABLE_LCD
         InitializeSpi();
         InitializeDisplay();
+#endif
+#if CONFIG_XIAOMOU_ENABLE_CAMERA
         InitializeCamera();
+#endif
         InitializeButtons();
+#if CONFIG_XIAOMOU_ENABLE_LCD
         if (DISPLAY_BACKLIGHT_PIN != GPIO_NUM_NC) {
             GetBacklight()->RestoreBrightness();
         }
+#endif
     }
 
     virtual Led* GetLed() override {
@@ -186,7 +193,11 @@ public:
     }
 
     virtual Display* GetDisplay() override {
+#if CONFIG_XIAOMOU_ENABLE_LCD
         return display_;
+#else
+        return Board::GetDisplay();
+#endif
     }
 
     virtual Backlight* GetBacklight() override {
@@ -195,10 +206,15 @@ public:
     }
 
     virtual Camera* GetCamera() override {
+#if CONFIG_XIAOMOU_ENABLE_CAMERA
         return camera_;
+#else
+        return nullptr;
+#endif
     }
 
     virtual AudioCodec* GetAudioCodec() override {
+#if CONFIG_XIAOMOU_ENABLE_AUDIO
         static Es8311AudioCodec audio_codec(
             codec_i2c_bus_, I2C_NUM_0,
             AUDIO_INPUT_SAMPLE_RATE, AUDIO_OUTPUT_SAMPLE_RATE,
@@ -206,6 +222,9 @@ public:
             AUDIO_I2S_GPIO_DOUT, AUDIO_I2S_GPIO_DIN,
             AUDIO_CODEC_PA_PIN, AUDIO_CODEC_ES8311_ADDR);
         return &audio_codec;
+#else
+        return nullptr;
+#endif
     }
 };
 

@@ -18,6 +18,10 @@ namespace audio_wifi_config
                                         size_t input_channels
                                     )
     {
+        if (!app->IsAudioEnabled()) {
+            ESP_LOGW(kLogTag, "Audio service disabled, skipping audio provisioning");
+            return;
+        }
         const int kInputSampleRate = 16000;                                    // Input sampling rate
         const float kDownsampleStep = static_cast<float>(kInputSampleRate) / static_cast<float>(kAudioSampleRate); // Downsampling step
         std::vector<int16_t> audio_data;

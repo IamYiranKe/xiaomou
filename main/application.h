@@ -45,7 +45,7 @@ public:
     void Start();
     void MainEventLoop();
     DeviceState GetDeviceState() const { return device_state_; }
-    bool IsVoiceDetected() const { return audio_service_.IsVoiceDetected(); }
+    bool IsVoiceDetected() const { return audio_enabled_ && audio_service_.IsVoiceDetected(); }
     void Schedule(std::function<void()> callback);
     void SetDeviceState(DeviceState state);
     void Alert(const char* status, const char* message, const char* emotion = "", const std::string_view& sound = "");
@@ -63,6 +63,7 @@ public:
     AecMode GetAecMode() const { return aec_mode_; }
     void PlaySound(const std::string_view& sound);
     AudioService& GetAudioService() { return audio_service_; }
+    bool IsAudioEnabled() const { return audio_enabled_; }
 
 private:
     Application();
@@ -78,6 +79,7 @@ private:
     AecMode aec_mode_ = kAecOff;
     std::string last_error_message_;
     AudioService audio_service_;
+    bool audio_enabled_ = false;
 
     bool has_server_time_ = false;
     bool aborted_ = false;

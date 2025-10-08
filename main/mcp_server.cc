@@ -52,16 +52,17 @@ void McpServer::AddCommonTools() {
             return board.GetDeviceStatusJson();
         });
 
-    AddTool("self.audio_speaker.set_volume", 
-        "Set the volume of the audio speaker. If the current volume is unknown, you must call `self.get_device_status` tool first and then call this tool.",
-        PropertyList({
-            Property("volume", kPropertyTypeInteger, 0, 100)
-        }), 
-        [&board](const PropertyList& properties) -> ReturnValue {
-            auto codec = board.GetAudioCodec();
-            codec->SetOutputVolume(properties["volume"].value<int>());
-            return true;
-        });
+    if (auto codec = board.GetAudioCodec()) {
+        AddTool("self.audio_speaker.set_volume", 
+            "Set the volume of the audio speaker. If the current volume is unknown, you must call `self.get_device_status` tool first and then call this tool.",
+            PropertyList({
+                Property("volume", kPropertyTypeInteger, 0, 100)
+            }), 
+            [codec](const PropertyList& properties) -> ReturnValue {
+                codec->SetOutputVolume(properties["volume"].value<int>());
+                return true;
+            });
+    }
     
     auto backlight = board.GetBacklight();
     if (backlight) {

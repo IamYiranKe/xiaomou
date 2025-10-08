@@ -383,6 +383,31 @@ choice BOARD_TYPE
         depends on IDF_TARGET_ESP32S3
 endchoice
 
+if BOARD_TYPE_XIAOMOU
+
+config XIAOMOU_ENABLE_LCD
+    bool "Enable Xiaomou LCD panel"
+    default y
+    help
+        Disable this option when running the Xiaomou firmware without the
+        SPI LCD attached to avoid repeated panel initialization failures.
+
+config XIAOMOU_ENABLE_CAMERA
+    bool "Enable Xiaomou camera module"
+    default y
+    help
+        Disable this when the OV camera module is not connected or while
+        diagnosing camera-related watchdog resets.
+
+config XIAOMOU_ENABLE_AUDIO
+    bool "Enable Xiaomou audio codec"
+    default y
+    help
+        Disable this to stub out the ES8311 codec and skip I2S setup when
+        the audio front-end is not attached.
+
+endif
+
 choice ESP_S3_LCD_EV_Board_Version_TYPE
     depends on BOARD_TYPE_ESP_S3_LCD_EV_Board
     prompt "EV_BOARD Type"
