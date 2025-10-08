@@ -146,7 +146,11 @@ private:
         config.frame_size = FRAMESIZE_QVGA;
         config.jpeg_quality = 12;
         config.fb_count = 1;
+#if CONFIG_SPIRAM
         config.fb_location = CAMERA_FB_IN_PSRAM;
+#else
+        config.fb_location = CAMERA_FB_IN_DRAM;
+#endif
         config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
         config.sccb_i2c_port = 0;
         camera_ = new Esp32Camera(config);

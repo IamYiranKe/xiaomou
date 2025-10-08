@@ -63,7 +63,13 @@ bool Esp32Camera::Capture() {
     // 显示预览图片
     auto display = dynamic_cast<LvglDisplay*>(Board::GetInstance().GetDisplay());
     if (display != nullptr) {
-        auto data = (uint8_t*)heap_caps_malloc(fb_->len, MALLOC_CAP_SPIRAM);
+        auto data = (uint8_t*)heap_caps_malloc(fb_->len,
+#if CONFIG_SPIRAM
+            MALLOC_CAP_SPIRAM
+#else
+            MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT
+#endif
+        );
         if (data == nullptr) {
             ESP_LOGE(TAG, "Failed to allocate memory for preview image");
             return false;
@@ -157,8 +163,17 @@ std::string Esp32Camera::Explain(const std::string& question) {
         image_to_jpeg_cb(fb_->buf, fb_->len, fb_->width, fb_->height, fb_->format, 80,
             [](void* arg, size_t index, const void* data, size_t len) -> size_t {
             auto jpeg_queue = (QueueHandle_t)arg;
+            auto* buffer = (uint8_t*)heap_caps_aligned_alloc(
+                16,
+                len,
+#if CONFIG_SPIRAM
+                MALLOC_CAP_SPIRAM
+#else
+                MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT
+#endif
+            );
             JpegChunk chunk = {
-                .data = (uint8_t*)heap_caps_aligned_alloc(16, len, MALLOC_CAP_SPIRAM),
+                .data = buffer,
                 .len = len
             };
             memcpy(chunk.data, data, len);
