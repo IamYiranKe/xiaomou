@@ -32,6 +32,7 @@ cd xiaomou/xiaomou
 ```bash
 idf.py -DBOARD_NAME=xiaomou build
 idf.py -DBOARD_NAME=xiaomou -p <串口号> flash monitor
+idf.py -DBOARD_NAME=xiaomou -p /dev/ttyACM0 flash
 ```
 - `build` 会生成固件并校验链接脚本。
 - `flash monitor` 会烧写并打开串口日志（按 `Ctrl+]` 退出）。
